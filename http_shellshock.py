@@ -1,5 +1,5 @@
 # httpshellshock.py
-# description: Checks if the cgi-bin of the target is vulnerable to Shellshockc
+# description: Checks if the cgi-bin of the target is vulnerable to Shellshock
 # author: @shipcod3
 
 import sys, requests
